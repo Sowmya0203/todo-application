@@ -1,0 +1,18 @@
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://sowmya:Sowmya%404020@localhost:5432/mydb"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+
+
