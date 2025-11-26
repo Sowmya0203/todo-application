@@ -1,65 +1,85 @@
-"use client";
+import { useState } from "react";
 
-import React, { useState } from "react";
+type Todo = {
+  id: number;
+  title: string;
+  description?: string;
+  priority?: string;
+  tags?: string[];
+  dueDate?: Date;
+  completed: boolean;
+};
 
-interface TodoItemProps {
-  todo: {
-    id: number;
-    title: string;
-    completed: boolean;
-  };
+type Props = {
+  todo: Todo;
   onDelete: (id: number) => void;
   onToggle: (id: number, completed: boolean) => void;
-  onUpdate: (id: number, title: string) => void;
-}
+  onUpdate: (id: number, data: Partial<Todo>) => void;
+};
 
-export default function TodoItem({ todo, onDelete, onToggle, onUpdate }: TodoItemProps) {
+export default function TodoItem({ todo, onDelete, onToggle, onUpdate }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
+  const [editDescription, setEditDescription] = useState(todo.description || "");
+  const [editPriority, setEditPriority] = useState(todo.priority || "MEDIUM");
+  const [editDueDate, setEditDueDate] = useState(todo.dueDate ? new Date(todo.dueDate).toISOString().slice(0,16) : "");
 
-  const handleUpdate = () => {
-    if (editTitle.trim() === "") return;
-    onUpdate(todo.id, editTitle.trim());
+  const handleSave = () => {
+    onUpdate(todo.id, {
+      title: editTitle,
+      description: editDescription,
+      priority: editPriority,
+      dueDate: editDueDate ? new Date(editDueDate) : undefined,
+    });
     setIsEditing(false);
   };
 
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <input
-          type="checkbox"
-          checked={todo.completed}
-          onChange={() => onToggle(todo.id, todo.completed)}
-        />
-        {isEditing ? (
-          <input
-            type="text"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={handleUpdate}
-            onKeyDown={(e) => e.key === "Enter" && handleUpdate()}
-            style={{ marginLeft: "8px", padding: "2px 4px" }}
-            autoFocus
-          />
-        ) : (
-          <span
-            style={{
-              marginLeft: "8px",
-              textDecoration: todo.completed ? "line-through" : "none",
-              color: todo.completed ? "gray" : "black",
-            }}
-          >
-            {todo.title}
-          </span>
-        )}
-      </div>
+  const formattedDueDate = todo.dueDate
+    ? new Date(todo.dueDate).toLocaleString("en-IN", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
 
-      <div>
-        <button onClick={() => setIsEditing(!isEditing)} style={{ marginRight: "8px" }}>
-          Edit
-        </button>
-        <button onClick={() => onDelete(todo.id)}>Delete</button>
-      </div>
+  return (
+    <div style={{ borderBottom: "1px solid #ccc", padding: "8px 0" }}>
+      <input
+        type="checkbox"
+        checked={todo.completed}
+        onChange={() => onToggle(todo.id, todo.completed)}
+      />
+      {isEditing ? (
+        <div>
+          <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+          <input value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+          <select value={editPriority} onChange={(e) => setEditPriority(e.target.value)}>
+            <option value="LOW">LOW</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="HIGH">HIGH</option>
+            <option value="NONE">NONE</option>
+          </select>
+          <input
+            type="datetime-local"
+            value={editDueDate}
+            onChange={(e) => setEditDueDate(e.target.value)}
+          />
+          <button onClick={handleSave}>Save</button>
+          <button onClick={() => setIsEditing(false)}>Cancel</button>
+        </div>
+      ) : (
+        <div style={{ textDecoration: todo.completed ? "line-through" : "none" }}>
+          <h4>{todo.title}</h4>
+          {todo.description && <p>{todo.description}</p>}
+          {todo.tags && todo.tags.length > 0 && <p>Tags: {todo.tags.join(", ")}</p>}
+          {todo.priority && <p>Priority: {todo.priority}</p>}
+          {formattedDueDate && <p>Due: {formattedDueDate}</p>}
+          <button onClick={() => setIsEditing(true)}>Edit</button>
+          <button onClick={() => onDelete(todo.id)}>Delete</button>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,8 +8,10 @@ import SmartInput from "./SmartInput";
 export default function TodoList() {
   const [todos, setTodos] = useState<any[]>([]);
   const [newTitle, setNewTitle] = useState("");
+  const [filterPriority, setFilterPriority] = useState("");
+  const [filterCompleted, setFilterCompleted] = useState("");
+  const [filterTag, setFilterTag] = useState("");
 
-  // FETCH TODOS
   const fetchTodos = async () => {
     try {
       const res = await axios.get("http://localhost:4000/api/todos");
@@ -19,11 +21,24 @@ export default function TodoList() {
     }
   };
 
+  const fetchFilteredTodos = async () => {
+    try {
+      const params: any = {};
+      if (filterPriority) params.priority = filterPriority;
+      if (filterCompleted) params.completed = filterCompleted;
+      if (filterTag) params.tag = filterTag;
+
+      const res = await axios.get("http://localhost:4000/api/todos/filter", { params });
+      setTodos(res.data);
+    } catch (err) {
+      console.error("Filter Error:", err);
+    }
+  };
+
   useEffect(() => {
     fetchTodos();
   }, []);
 
-  // ADD NORMAL TODO
   const addTodo = async () => {
     if (!newTitle.trim()) return;
     try {
@@ -35,7 +50,6 @@ export default function TodoList() {
     }
   };
 
-  // DELETE TODO
   const handleDelete = async (id: number) => {
     try {
       await axios.delete(`http://localhost:4000/api/todos/${id}`);
@@ -45,7 +59,6 @@ export default function TodoList() {
     }
   };
 
-  // TOGGLE CHECKBOX
   const handleToggle = async (id: number, completed: boolean) => {
     try {
       const res = await axios.patch(`http://localhost:4000/api/todos/${id}`, { completed: !completed });
@@ -55,23 +68,22 @@ export default function TodoList() {
     }
   };
 
-  // UPDATE TODO TITLE
-  const handleUpdate = async (id: number, title: string) => {
+  const handleUpdate = async (id: number, data: any) => {
     try {
-      const res = await axios.patch(`http://localhost:4000/api/todos/${id}`, { title });
+      const res = await axios.patch(`http://localhost:4000/api/todos/${id}`, data);
       setTodos((prev) => prev.map((t) => (t.id === id ? res.data : t)));
     } catch (err) {
       console.error("Update Error:", err);
     }
   };
 
-  // SMART TODOS
   const handleSmartTodos = (newTodos: any[]) => {
     setTodos((prev) => [...newTodos, ...prev]);
   };
 
   return (
     <div style={{ padding: "20px" }}>
+      {/* ADD TODO */}
       <div style={{ marginBottom: "16px" }}>
         <input
           type="text"
@@ -80,15 +92,41 @@ export default function TodoList() {
           placeholder="Add new todo"
           style={{ padding: "4px 8px", width: "300px" }}
         />
-        <button onClick={addTodo} style={{ marginLeft: "8px" }}>
-          Add
-        </button>
+        <button onClick={addTodo} style={{ marginLeft: "8px" }}>Add</button>
       </div>
 
+      {/* SMART INPUT */}
       <SmartInput onTodosCreated={handleSmartTodos} />
 
-      {todos.length === 0 && <p style={{ color: "gray" }}>No todos found. Add one!</p>}
+      {/* FILTERS */}
+      <div style={{ marginBottom: "16px" }}>
+        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}>
+          <option value="">All Priorities</option>
+          <option value="LOW">LOW</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="HIGH">HIGH</option>
+          <option value="NONE">NONE</option>
+        </select>
 
+        <select value={filterCompleted} onChange={(e) => setFilterCompleted(e.target.value)} style={{ marginLeft: "8px" }}>
+          <option value="">All Status</option>
+          <option value="true">Completed</option>
+          <option value="false">Incomplete</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="Tag"
+          value={filterTag}
+          onChange={(e) => setFilterTag(e.target.value)}
+          style={{ marginLeft: "8px" }}
+        />
+
+        <button onClick={fetchFilteredTodos} style={{ marginLeft: "8px" }}>Filter</button>
+      </div>
+
+      {/* TODO LIST */}
+      {todos.length === 0 && <p style={{ color: "gray" }}>No todos found. Add one!</p>}
       {todos.map((todo) => (
         <TodoItem
           key={todo.id}

@@ -1,21 +1,18 @@
-import express from "express";
+import { Router } from "express";
 import {
-  getTodos,
   createTodo,
+  getTodos,
   updateTodo,
   deleteTodo,
+  filterTodos,
 } from "../controllers/todoController";
-import { createSmartTodo } from "../controllers/smartTodo.controller";
 
-const router = express.Router();
+const router = Router();
 
-// Normal CRUD routes
-router.get("/api/todos", getTodos);
-router.post("/api/todos", createTodo);
-router.patch("/api/todos/:id", updateTodo);
-router.delete("/api/todos/:id", deleteTodo);
-
-// Smart todo
-router.post("/api/todos/smart", createSmartTodo);
+router.post("/", createTodo);
+router.get("/", getTodos);
+router.get("/filter", filterTodos);
+router.put("/:id", updateTodo);
+router.delete("/:id", deleteTodo);
 
 export default router;

@@ -8,15 +8,14 @@ datasource db {
 }
 
 model Todo {
-  id         Int       @id @default(autoincrement())
-  title      String
-  completed  Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  dueDate    DateTime?
-  priority   Priority? @default(NONE)
-  recurrence String?
-  tags       String[]
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?   // <-- ADD THIS
+  priority    Priority  @default(MEDIUM)
+  tags        String[]
+  dueDate     DateTime?
+  completed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
 }
 
 enum Priority {
